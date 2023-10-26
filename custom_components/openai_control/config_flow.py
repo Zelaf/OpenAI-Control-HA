@@ -40,6 +40,8 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): str,
+        vol.Required(CONF_API_BASE): str,
+        vol.Required(CONF_API_VERSION): str,
     }
 )
 
@@ -59,8 +61,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
+    openai.api_type = "azure"
     openai.api_key = data[CONF_API_KEY]
-    await hass.async_add_executor_job(partial(openai.Engine.list, request_timeout=10))
+    openai.api_base = data[CONF_API_BASE]
+    openai.api_version = data[CONF_API_VERSION]
+
+    await hass.async_add_executor_job(partial(openai.Model.list, request_timeout=10))
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -89,7 +95,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            return self.async_create_entry(title="OpenAI Conrtrol", data=user_input)
+            return self.async_create_entry(
+                title="Azure OpenAI Conversation", data=user_input
+            )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
