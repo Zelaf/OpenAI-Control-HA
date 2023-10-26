@@ -42,12 +42,15 @@ entity_template = Template(ENTITY_TEMPLATE)
 prompt_template = Template(PROMPT_TEMPLATE)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up OpenAI Agent from a config entry."""
+    """Set up OpenAI Conversation from a config entry."""
     openai.api_key = entry.data[CONF_API_KEY]
+    openai.api_type = "azure"
+    openai.api_base = entry.data[CONF_API_BASE]
+    openai.api_version = entry.data[CONF_API_VERSION]
 
     try:
         await hass.async_add_executor_job(
-            partial(openai.Engine.list, request_timeout=10)
+            partial(openai.Model.list, request_timeout=10)
         )
     except error.AuthenticationError as err:
         _LOGGER.error("Invalid API key: %s", err)
